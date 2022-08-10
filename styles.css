@@ -1,0 +1,72 @@
+:root {
+	font-family: sans-serif;
+	box-sizing: border-box;
+
+	--indent-width: 1rem;
+	--tag-color: blue;
+	--attribute-name-color: green;
+	--attribute-value-color: red;
+	--text-color: black;
+	--cdata-color: darkorange;
+}
+
+body {
+	margin: 0 auto;
+	padding: 0 1rem;
+	max-width: 80rem;
+}
+
+*,*::before,*::after {
+	box-sizing: inherit;
+}
+
+#content {
+	width: 100%;
+	border: 1px solid currentColor;
+	padding: .5rem;
+	margin: .5rem -.5rem;
+	overflow: auto;
+}
+
+.child {
+	padding-left: var(--indent-width);
+}
+
+.tag {
+	color: var(--tag-color);
+}
+.attribute {
+	color: var(--text-color);
+}
+.attribute-name {
+	color: var(--attribute-name-color);
+}
+.attribute-value {
+	color: var(--attribute-value-color);
+}
+.comment,.doctype {
+	color: var(--text-color);
+	opacity: .5;
+}
+.cdata {
+	color: var(--cdata-color);
+}
+.cdata-value {
+	color: var(--text-color);
+}
+.text {
+	color: var(--text-color);
+}
+
+@media(prefers-color-scheme: dark) {
+	:root {
+		background: black;
+		color: white;
+		--tag-color: lightblue;
+		--attribute-name-color: lightgreen;
+		--attribute-value-color: pink;
+		--text-color: white;
+		--cdata-color: orange;
+	}
+}
+
