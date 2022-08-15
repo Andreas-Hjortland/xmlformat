@@ -74,7 +74,7 @@ function parse(xml, isHtml) {
 
 	//doc.querySelector('parsererror')?.remove();
 	window.lastDocument = doc;
-	const result = '';
+	let result = '';
 	for(const child of doc.childNodes) {
 		result += `${parseNode(child)}\n`;
 	}
