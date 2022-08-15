@@ -10,108 +10,58 @@ function render(value) {
 	}
 }
 
-function parseNode(node) {
+function parseNode(node, indentLevel = 0) {
+	const indent = new Array(indentLevel * 4).join(' ');
+	let result;
 	switch(node.nodeType) {
 		case Node.ELEMENT_NODE:
-			const elementNode = document.createElement('div');
-			elementNode.className = 'element';
-
-			const tagElt = document.createElement('span');
-			tagElt.className = 'tag';
-			tagElt.appendChild(document.createTextNode(`<${node.tagName}`));
-			elementNode.appendChild(tagElt);
+			result = indent + `<${node.tagName}`;
 
 			for(const { name, value } of node.attributes) {
-				tagElt.appendChild(document.createTextNode(' '));
-				const attrElement = document.createElement('span');
-				attrElement.className = 'attribute';
-
-				const attrNameElement = document.createElement('span');
-				attrNameElement.className = 'attribute-name';
-				attrNameElement.textContent = name;
-				attrElement.appendChild(attrNameElement);
-
-				attrElement.appendChild(document.createTextNode('="'));
-
-				const attrValueElement = document.createElement('span');
-				attrValueElement.className = 'attribute-value';
-				attrValueElement.textContent = value;
-				attrElement.appendChild(attrValueElement);
-				attrElement.appendChild(document.createTextNode('"'));
-
-				tagElt.appendChild(attrElement);
+				result += ` ${name}=${value}`;
 			}
 			if(node.hasChildNodes()) {
-				tagElt.appendChild(document.createTextNode('>'));
+				result += '>\n';
 				if(node.childNodes.length === 1 && node.childNodes[0].nodeType === Node.TEXT_NODE && !/^\s*$/.test(node.childNodes[0].data)) {
-					elementNode.appendChild(parseNode(node.childNodes[0]));
+					result += node.childNodes[0].data;
 				} else {
-					const childNode = document.createElement('div');
-					childNode.className = 'child';
-					elementNode.appendChild(childNode);
 					for(const child of node.childNodes) {
 						if(child.nodeType === Node.TEXT_NODE && /^\s*$/.test(child.data)) {
 							continue;
 						}
-						childNode.appendChild(parseNode(child));
+						result += parseNode(child, intentLevel + 1) + '\n';
 					}
 				}
-				const endTag = document.createElement(node.childElementCount > 0 ? 'div' : 'span');
-				endTag.className = 'tag';
-				endTag.appendChild(document.createTextNode(`</${node.tagName}>`));
-				elementNode.appendChild(endTag);
+				result += `</${node.tagName}>\n`;
 			} else {
-				tagElt.appendChild(document.createTextNode(' />'));
+				result += ' />\n';
 			}
 
-			return elementNode;
+			return result;
 
 		case Node.TEXT_NODE:
-			const textNode = document.createElement('span');
-			textNode.className = 'text';
-			textNode.textContent = node.data;
-			return textNode;
+			return node.data;
 
 		case Node.CDATA_SECTION_NODE:
-			const cdataElt = document.createElement('span');
-			cdataElt.className = 'cdata';
-			cdataElt.appendChild(document.createTextNode('<![CDATA['));
-
-			const cdataVal = document.createElement('span');
-			cdataVal.className = 'cdata-value';
-			cdataVal.textContent = node.data;
-			cdataElt.appendChild(cdataVal);
-
-			cdataElt.appendChild(document.createTextNode(']]>'));
-			return cdataElt;
+			return `<![CDATA[${node.data}]]>`;
 
 	   case Node.COMMENT_NODE:
-			const commentElt = document.createElement('span');
-			commentElt.className = 'comment';
-			commentElt.appendChild(document.createTextNode(`<!--${node.data}-->`));
-			return commentElt;
+			return `<!--${node.data}-->`;
 
 	   case Node.PROCESSING_INSTRUCTION_NODE:
-			const processingInstructionElt = document.createElement('span');
-			processingInstructionElt.className = 'comment';
-			processingInstructionElt.appendChild(document.createTextNode(`<?${node.target} ${node.data}?>`));
-			return processingInstructionElt;
+			return `<?${node.target} ${node.data}?>`;
 
 	   case Node.DOCUMENT_TYPE_NODE:
-		   const doctypeElt = document.createElement('span');
-		   doctypeElt.className = 'doctype';
-		   let doctypeStr = `<!DOCTYPE ${node.name}`;
+		   result = `<!DOCTYPE ${node.name}`;
 		   if(node.publicId) {
-			   doctypeStr += ` PUBLIC "${node.publicId}"`;
+			   result += ` PUBLIC "${node.publicId}"`;
 		   }
 		   if(node.systemId) {
-			   doctypeStr += ` "${node.systemId}"`;
+			   result += ` "${node.systemId}"`;
 		   }
-		   doctypeStr += '>'
+		   result += '>'
 
-		   doctypeElt.textContent = doctypeStr;
-
-		   return doctypeElt;
+		   return result;
 		default:
 			throw new Error('Wat?');
 			break;
@@ -124,14 +74,9 @@ function parse(xml, isHtml) {
 
 	//doc.querySelector('parsererror')?.remove();
 	window.lastDocument = doc;
-	const result = document.createDocumentFragment();
-	let first = true;
+	const result = '';
 	for(const child of doc.childNodes) {
-		if(!first) {
-			result.appendChild(document.createTextNode('\n'));
-		}
-		first = false;
-		result.appendChild(parseNode(child));
+		result += `${parseNode(child)}\n`;
 	}
 	const used = performance.now() - ts;
 	console.log('Used', used, 'ms to create dom tree');
