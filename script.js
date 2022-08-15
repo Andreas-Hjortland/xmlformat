@@ -1,9 +1,9 @@
 function render(value) {
 	const content = document.getElementById('content');
-	if(typeof value === 'string') {
+	if (typeof value === 'string') {
 		content.textContent = value;
 	} else {
-		while(content.firstChild) {
+		while (content.firstChild) {
 			content.removeChild(content.firstChild);
 		}
 		content.appendChild(value);
@@ -13,26 +13,22 @@ function render(value) {
 function parseNode(node, indentLevel = 0) {
 	const indent = new Array(indentLevel * 4).join(' ');
 	let result;
-	switch(node.nodeType) {
+	switch (node.nodeType) {
 		case Node.ELEMENT_NODE:
 			result = indent + `<${node.tagName}`;
 
-			for(const { name, value } of node.attributes) {
+			for (const { name, value } of node.attributes) {
 				result += ` ${name}=${value}`;
 			}
-			if(node.hasChildNodes()) {
+			if (node.hasChildNodes()) {
 				result += '>\n';
-				if(node.childNodes.length === 1 && node.childNodes[0].nodeType === Node.TEXT_NODE && !/^\s*$/.test(node.childNodes[0].data)) {
-					result += node.childNodes[0].data;
-				} else {
-					for(const child of node.childNodes) {
-						if(child.nodeType === Node.TEXT_NODE && /^\s*$/.test(child.data)) {
-							continue;
-						}
-						result += parseNode(child, intentLevel + 1) + '\n';
+				for (const child of node.childNodes) {
+					if (child.nodeType === Node.TEXT_NODE && /^[\n\r\t ]*$/.test(child.data)) {
+						continue;
 					}
+					result += parseNode(child, indentLevel + 1);
 				}
-				result += `</${node.tagName}>\n`;
+				result += `${indent}</${node.tagName}>\n`;
 			} else {
 				result += ' />\n';
 			}
@@ -40,31 +36,36 @@ function parseNode(node, indentLevel = 0) {
 			return result;
 
 		case Node.TEXT_NODE:
-			return node.data;
+			return node.data.trim().split('\n').map(val => indent + val.trim()).join('\n') + '\n';
 
 		case Node.CDATA_SECTION_NODE:
-			return `<![CDATA[${node.data}]]>`;
+			if (/\n/.test(node.data)) {
+				return `${indent}<![CDATA[\n${node.data.trim().split('\n').map(val => indent + val.trim()).join('\n')}\n${indent}]]>\n`;
+			}
+			return `${indent}<![CDATA[${node.data.trim()}]]>`;
 
-	   case Node.COMMENT_NODE:
-			return `<!--${node.data}-->`;
+		case Node.COMMENT_NODE:
+			if (/\n/.test(node.data)) {
+				return `${indent}<!--\n${node.data.trim().split('\n').map(val => indent + val.trim()).join('\n')}\n${indent}-->\n`;
+			}
+			return `${indent}<!-- ${node.data.trim()} -->\n`
 
-	   case Node.PROCESSING_INSTRUCTION_NODE:
-			return `<?${node.target} ${node.data}?>`;
+		case Node.PROCESSING_INSTRUCTION_NODE:
+			return `${indent}<?${node.target} ${node.data}?>\n`;
 
-	   case Node.DOCUMENT_TYPE_NODE:
-		   result = `<!DOCTYPE ${node.name}`;
-		   if(node.publicId) {
-			   result += ` PUBLIC "${node.publicId}"`;
-		   }
-		   if(node.systemId) {
-			   result += ` "${node.systemId}"`;
-		   }
-		   result += '>'
+		case Node.DOCUMENT_TYPE_NODE:
+			result = `${indent}<!DOCTYPE ${node.name}`;
+			if (node.publicId) {
+				result += ` PUBLIC "${node.publicId}"`;
+			}
+			if (node.systemId) {
+				result += ` "${node.systemId}"`;
+			}
+			result += '>\n';
 
-		   return result;
+			return result;
 		default:
 			throw new Error('Wat?');
-			break;
 	}
 }
 
@@ -75,8 +76,8 @@ function parse(xml, isHtml) {
 	//doc.querySelector('parsererror')?.remove();
 	window.lastDocument = doc;
 	let result = '';
-	for(const child of doc.childNodes) {
-		result += `${parseNode(child)}\n`;
+	for (const child of doc.childNodes) {
+		result += `${parseNode(child)}`;
 	}
 	const used = performance.now() - ts;
 	console.log('Used', used, 'ms to create dom tree');
