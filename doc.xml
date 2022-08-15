@@ -2,7 +2,7 @@
 <!-- Comment outside normal flow -->
 <?bar lols?>
 <Types xmlns:foo="http://schemas.foo.org/package/2020/test" xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><?foo custom="yes" bar="baz" ?><Override PartName="/word/footnotes.xml" foo:test="test" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footnotes+xml"><foo><bar>test</bar>lols</foo></Override><Override PartName="/customXml/itemProps1.xml" ContentType="application/vnd.openxmlformats-officedocument.customXmlProperties+xml"></Override>
-<Override PartName="/word/glossary/fontTable.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml">
+<Override PartName="/word/glossary/fontTable.xml" ContentType="&quot;application/vnd.openxmlformats-officedocument.wordprocessingml.fontTable+xml&quot;">
     foo bar
     baz qux, quux
 </Override>

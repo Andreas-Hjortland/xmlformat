@@ -9,7 +9,14 @@ function render(value) {
 		content.appendChild(value);
 	}
 }
-
+function escapeXml(val) {
+	return val
+		.replace(/&/g, '&amp;')
+		.replace(/</g, '&lt;')
+		.replace(/>/g, '&gt;')
+		.replace(/"/g, '&quot;')
+		.replace(/'/g, '&apos;');
+}
 function parseNode(node, indentLevel = 0) {
 	const indent = new Array(indentLevel * 4).join(' ');
 	let result;
@@ -18,7 +25,7 @@ function parseNode(node, indentLevel = 0) {
 			result = indent + `<${node.tagName}`;
 
 			for (const { name, value } of node.attributes) {
-				result += ` ${name}=${value}`;
+				result += ` ${name}="${escapeXml(value)}"`;
 			}
 			if (node.hasChildNodes()) {
 				result += '>\n';
@@ -36,7 +43,7 @@ function parseNode(node, indentLevel = 0) {
 			return result;
 
 		case Node.TEXT_NODE:
-			return node.data.trim().split('\n').map(val => indent + val.trim()).join('\n') + '\n';
+			return node.data.trim().split('\n').map(val => indent + escapeXml(val.trim())).join('\n') + '\n';
 
 		case Node.CDATA_SECTION_NODE:
 			if (/\n/.test(node.data)) {
